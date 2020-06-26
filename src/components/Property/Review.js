@@ -3,9 +3,11 @@ import React from "react";
 const Review = ({
 	author,
 	date,
-	text,
+    text,
+    renderEdit,
     options,
-    renderOptions
+    renderOptions,
+    showTextArea
 }) => {
 	return (
 		<article class="media">
@@ -22,7 +24,7 @@ const Review = ({
                             {renderOptions && options}
 						</div>
 					</div>
-					<p style={{ fontSize:"18px" }}>{text}</p>
+					<p style={{ fontSize:"18px" }}>{showTextArea ? renderEdit : text}</p>
 				</p>
 			</div>
 		</article>

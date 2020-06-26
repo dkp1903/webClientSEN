@@ -40,6 +40,8 @@ class Extended extends Component {
             reviewsVisible: 3,
             reviewInput: "",
             isWishlisted: false,
+            showEdit: false,
+            editReviewId: null,
 			viewport: {
 				latitude: 23.0225,
 				longitude: 72.5714,
@@ -142,8 +144,58 @@ class Extended extends Component {
         }
     };
 
-    RenderOptions = (reviewId, userId) => {
+    submitEditReview = () => {
+        const propertyId = this.props.match.params.id;
+
+        const reviewUrl = SERVER_URL + "/property_review/" + propertyId;
+        const reviewText = this.state.reviewInput
+
+        axios.put(`${SERVER_URL}/property_review/${this.state.editReviewId}`, {reviewText}).then(res => {
+            toast.success("Review added successfully")
+            this.setState({showEdit: false, reviewInput: ""});
+            this.GetReviews(reviewUrl);
+        })
+        .catch( err => {
+            if (err.response) {
+                toast.error(err.response.data.message)
+            } else {
+                console.log(err)
+            }
+        })
+    };
+
+    RenderEditReview = (text) => {
+        return (
+            <div class="box">
+                <div class="field">
+                    <div class="control">
+                        <textarea
+                            class="textarea"
+                            placeholder="Write a review..."
+                            onChange={this.handleChange}
+                        >
+                            {text}
+                        </textarea>
+                    </div>
+                </div>
+                <button class="button is-primary" onClick={this.submitEditReview} >
+                    Submit
+                </button>
+            </div>
+        );
+    };
+
+    RenderOptions = (reviewId, userId, reviewText) => {
         const reviewUrl = SERVER_URL + "/property_review/" + this.props.match.params.id;
+
+        const handleEdit = () => {
+            this.setState({reviewInput: reviewText});
+            if(this.state.showEdit) {
+                this.setState({showEdit: false, editReviewId: null});
+            } else{
+                this.setState({showEdit: true, editReviewId: reviewId});
+            }
+        }
 
         const handleDelete = () => {
             axios.delete(`${SERVER_URL}/property_review/${reviewId}`, {userId}).then( res => {
@@ -160,6 +212,13 @@ class Extended extends Component {
         }
         return (
             <div class="level-item">
+                <span className="icon">
+                    <BootstrapTooltip title={"Edit"}>
+                        <IconButton disableRipple="true" size="small" onClick={handleEdit}>
+                            <i className="fas fa-edit fa-xs"/>
+                        </IconButton>
+                    </BootstrapTooltip>
+                </span>
                 <span className="icon">
                     <BootstrapTooltip title={"Delete"}>
                         <IconButton disableRipple="true" size="small" onClick={handleDelete}>
@@ -181,8 +240,10 @@ class Extended extends Component {
                             author={review.firstName + " " + review.lastName}
                             date={<ReactTimeAgo date={review.created_at}/>}
                             text={review.reviewText}
-                            options={this.RenderOptions(review.reviewId, review.userId)}
+                            options={this.RenderOptions(review.reviewId, review.userId, review.reviewText)}
                             renderOptions={this.props.user.userId === review.userId ? true : false}
+                            renderEdit={this.RenderEditReview(review.reviewText)}
+                            showTextArea={this.state.editReviewId===review.reviewId ? this.state.showEdit : false}
                         />
                 ))}
             </div>
